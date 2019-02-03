@@ -18,7 +18,7 @@ module.exports = (sequelize, DataTypes) => {
     });
 
     Topic.hasMany(models.Post, {
-      foreinKey: "topicId",
+      foreignKey: "topicId",
       as: "posts"
     });
   };
