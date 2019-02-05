@@ -1,5 +1,6 @@
 const Topic = require("./models").Topic;
 const Post = require("./models").Post;
+const Flair = require("./models").Flair;
 
 module.exports = {
 
@@ -16,8 +17,7 @@ module.exports = {
   getTopic(id, callback){
     return Topic.findByPk(id, {
       include: [{
-        model: Post,
-        as: "posts"
+        all: true
       }]
     })
     .then((topic) => {
