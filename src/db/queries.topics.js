@@ -1,6 +1,7 @@
 const Topic = require("./models").Topic;
 const Post = require("./models").Post;
 const Flair = require("./models").Flair;
+const Authorizer = require("../policies/topic");
 
 module.exports = {
 
@@ -41,33 +42,46 @@ module.exports = {
     });
   },
 
-  deleteTopic(id, callback){
-    return Topic.destroy({
-      where: {id}
-    })
+  deleteTopic(req, callback){
+    return Topic.findByPk(req.params.id)
     .then((topic) => {
-      callback(null, topic);
+      const authorized = new Authorizer(req.user, topic).destroy();
+      if(authorized){
+        topic.destroy()
+        .then((res) => {
+          callback(null, topic);
+        });
+      } else {
+        req.flash("notice", "You are not authorized to do that.")
+        callback(401);
+      }
     })
     .catch((err) => {
       callback(err);
     });
   },
 
-  updateTopic(id, updatedTopic, callback){
-    return Topic.findByPk(id)
+  updateTopic(req, updatedTopic, callback){
+    return Topic.findByPk(req.params.id)
     .then((topic) => {
       if(!topic){
         return callback("Topic not found");
       }
-      topic.update(updatedTopic, {
-        fields: Object.keys(updatedTopic)
-      })
-      .then(() => {
-        callback(null, topic);
-      })
-      .catch((err) => {
-        callback(err);
-      });
+      const authorized = new Authorizer(req.user, topic).update();
+      if(authorized){
+        topic.update(updatedTopic, {
+          fields: Object.keys(updatedTopic)
+        })
+        .then(() => {
+          callback(null, topic);
+        })
+        .catch((err) => {
+          callback(err);
+        });
+      } else {
+        req.flash("notice", "You are not authorized to do that.")
+        callback("Forbidden");
+      }
     });
   }
 
