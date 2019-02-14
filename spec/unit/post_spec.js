@@ -126,7 +126,7 @@ describe("Post" , () => {
         expect(this.post.userId).toBe(this.user.id);
         this.post.setUser(newUser)
         .then((post) => {
-          expect(this.post.userId).toBe(this.newUser.id);
+          expect(this.post.userId).toBe(newUser.id);
           done();
         })
         .catch((err) => {

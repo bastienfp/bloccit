@@ -17,6 +17,18 @@ module.exports = {
     .catch((err) => {
       callback(err);
     });
+  },
+
+  getUser(email, callback){
+    return User.findOne({
+      where: {email: email}
+    })
+    .then((user) => {
+      callback(null, user)
+    })
+    .catch((err) =>{
+      callback(err);
+    });
   }
 
 }

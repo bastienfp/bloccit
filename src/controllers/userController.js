@@ -13,15 +13,23 @@ module.exports = {
       passwordConfirmation: req.body.passwordConfirmation
     };
 
-    userQueries.createUser(newUser, (err, user) => {
-      if(err){
-        req.flash("error", err);
+    userQueries.getUser(newUser.email, (err, user) => {
+      if(user !== null){
+        req.flash("notice", "This email is already used!");
         res.redirect("/users/sign_up");
       } else {
-        passport.authenticate("local")(req, res, () => {
-          req.flash("notice", "You've successfully signed in!");
-          res.redirect("/");
-        })
+        userQueries.createUser(newUser, (err, user) => {
+          if(err){
+            console.log(err);
+            req.flash("error", err);
+            res.redirect("/users/sign_up");
+          } else {
+            passport.authenticate("local")(req, res, () => {
+              req.flash("notice", "You've successfully signed in!");
+              res.redirect("/");
+            })
+          }
+        });
       }
     });
   },
@@ -30,21 +38,44 @@ module.exports = {
     res.render("users/sign_in");
   },
 
+  // signIn(req, res, next){
+  //   passport.authenticate("local")(req, res, () => {
+  //     console.log(err);
+  //     console.log(user);
+  //     if(!user){
+  //       req.flash("notice", "Sign in failed. Please try again.");
+  //       res.redirect("/users/sign_in");
+  //     } else {
+  //       req.flash("notice", "You've successfully signed in!");
+  //       res.redirect("/");
+  //     }
+  //   })
+  // },
+
   signIn(req, res, next){
-    passport.authenticate("local")(req, res, function () {
-      if(!req.user){
-        req.flash("notice", "Sign in failed. Please try again.");
-        res.redirect("/users/sign_in");
-      } else {
-        req.flash("notice", "You've successfully signed in!");
-        res.redirect("/");
+    passport.authenticate('local', function(err, user, info) {
+      if (err) {
+        return next(err);
       }
-    });
+      //console.log(user);
+      //console.log(info);
+      if (!user) {
+        req.flash("notice", "Sign in failed. Please try again.");
+        return res.redirect('/users/sign_in');
+      }
+      req.logIn(user, function(err) {
+        if (err) {
+          return next(err);
+        }
+        req.flash("notice", "You've successfully signed in!");
+        return res.redirect('/');
+      });
+    })(req, res, next);
   },
 
   signOut(req, res, next){
     req.logout();
-    req("flash", "You've successfully signed out!");
+    req.flash("notice", "You've successfully signed out!");
     res.redirect("/");
   }
 
